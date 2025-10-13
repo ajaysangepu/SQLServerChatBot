@@ -11,16 +11,4 @@ This Streamlit-based chatbot allows users to ask SQL Server questions in natural
 - Exports data results to Excel
 - Displays output tables in an interactive format
 
-🛠️ Requirements
-
-- Python 3.9 or higher  
-- Microsoft SQL Server with ODBC Driver 17+  
-- Streamlit installed
-
-⚙️ Installation
-
-1. Clone this repository  
-   ```bash
-   git clone https://github.com/ajaysangepu/SQLServerChatBot.git
-   cd SQLServerChatBot
 
