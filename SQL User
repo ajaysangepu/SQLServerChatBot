@@ -1,0 +1,79 @@
+Prerequisites
+
+Before running the SQL Server Chatbot, ensure that your SQL Server instance has a dedicated read-only user of the required permissions.
+The chatbot reads performance metrics, DMVs, system catalog views, and Query Store data — it does not require any write privileges.
+
+
+1. Create Login & Users
+
+Create the login - master database:
+CREATE LOGIN chatbot_ro WITH PASSWORD = 'StrongP@ssw0rd#123';
+
+
+Create a user - master database:
+USE master;
+CREATE USER chatbot_ro FOR LOGIN chatbot_ro;
+
+Create the same user - Each database the chatbot will access:
+USE AdventureWorks2017;
+CREATE USER chatbot_ro FOR LOGIN chatbot_ro;
+
+2. Required Server-Level Permissions
+
+Grant minimal server-wide permissions:
+
+GRANT VIEW SERVER STATE TO chatbot_ro;
+GRANT VIEW ANY DEFINITION TO chatbot_ro;
+
+Purpose:
+
+* Enables reading system DMVs (CPU, waits, I/O, TempDB, memory).
+* Allows viewing metadata in sys.* catalog views.
+
+3. Required Database-Level Permissions
+
+Grant these permissions - Each database the chatbot will query:
+
+USE AdventureWorks2017;
+GRANT CONNECT TO chatbot_ro;
+GRANT VIEW DATABASE STATE TO chatbot_ro;
+GRANT SELECT ON DATABASE::YourDatabaseName TO chatbot_ro;
+
+Purpose:
+
+* Read DB-level DMV data (index stats, space usage, file stats).
+* Read system catalog (tables, views, procedures).
+
+4. Query Store Permissions (Optional but Recommended)
+
+If Query Store insights are enabled:
+
+USE AdventureWorks2017;
+GRANT SELECT ON sys.query_store_query TO chatbot_ro;
+GRANT SELECT ON sys.query_store_query_text TO chatbot_ro;
+GRANT SELECT ON sys.query_store_plan TO chatbot_ro;
+GRANT SELECT ON sys.query_store_runtime_stats TO chatbot_ro;
+
+5. Recommended Security Hardening (DENY)
+
+Explicitly prevent the user from modifying server or database objects:
+
+DENY ALTER ANY DATABASE TO chatbot_ro;
+DENY ALTER ANY LOGIN TO chatbot_ro;
+DENY CONTROL SERVER TO chatbot_ro;
+DENY CREATE DATABASE TO chatbot_ro;
+DENY ALTER ANY USER TO chatbot_ro;
+
+This ensures the account remains strictly read-only.
+  
+6. Verification Test
+
+Connect using the `chatbot_ro` login and run:
+
+SELECT @@SERVERNAME, @@VERSION;
+SELECT TOP 5 * FROM sys.dm_os_wait_stats;
+SELECT TOP 1 * FROM sys.dm_os_ring_buffers;
+SELECT TOP 10 name, state_desc FROM sys.databases;
+
+If these queries succeed → the chatbot fully ready to run.
+
